@@ -61,18 +61,27 @@ fi
 
 # Confirmation
 echo ""
-if [ -t 0 ]; then
-    # Interactive terminal - ask for confirmation
+# Try to get user input even when piped (using /dev/tty)
+if [ -t 1 ] && [ -r /dev/tty ]; then
+    # Can access terminal for input/output
+    echo -e "${YELLOW}💡 Are you sure you want to uninstall Henotic Gitco? (y/N):${NC} \c" >/dev/tty
+    read confirm </dev/tty
+    if [[ ! $confirm == [yY] ]]; then
+        echo -e "${BLUE}👍 Uninstall cancelled. Gitco stays! 🎉${NC}"
+        exit 0
+    fi
+elif [ -t 0 ]; then
+    # Standard interactive mode
     read -p "Are you sure you want to uninstall Henotic Gitco? (y/N): " confirm
     if [[ ! $confirm == [yY] ]]; then
         echo -e "${BLUE}👍 Uninstall cancelled. Gitco stays! 🎉${NC}"
         exit 0
     fi
 else
-    # Non-interactive (piped from curl) - show warning and continue after delay
-    echo -e "${YELLOW}⚠️  Running in non-interactive mode (piped from curl)${NC}"
-    echo -e "${CYAN}🔄 Continuing uninstall in 3 seconds... (Press Ctrl+C to cancel)${NC}"
-    sleep 3
+    # Truly non-interactive - fallback to countdown
+    echo -e "${YELLOW}⚠️  Running in non-interactive mode (no terminal access)${NC}"
+    echo -e "${CYAN}🔄 Continuing uninstall in 5 seconds... (Press Ctrl+C to cancel)${NC}"
+    sleep 5
 fi
 
 echo ""
