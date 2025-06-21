@@ -90,7 +90,7 @@ elif [[ $GITCO_INSTALLED == false && $FOUND_LEFTOVER == true ]]; then
     echo -e "${BLUE}ℹ️  Henotic Gitco command is not available, but leftover configurations found.${NC}"
     echo -e "${YELLOW}🔍 Found gitco references in configuration files.${NC}"
     echo -e "${CYAN}🧹 Do you want to clean up these leftover configurations?${NC}"
-    read -p "Type 'yes' to clean up: " confirm_cleanup
+    read -p "Type 'yes' to clean up: " confirm_cleanup </dev/tty
     
     if [[ $confirm_cleanup != "yes" ]]; then
         echo -e "${BLUE}👍 Cleanup cancelled. Leftover configurations remain.${NC}"
@@ -102,7 +102,7 @@ elif [[ $GITCO_INSTALLED == true ]]; then
     # Normal uninstall
     echo -e "${RED}⚠️  This will remove Henotic Gitco from your system.${NC}"
     echo -e "${YELLOW}Are you sure you want to uninstall Henotic Gitco?${NC}"
-    read -p "Type 'yes' to confirm: " confirm
+    read -p "Type 'yes' to confirm: " confirm </dev/tty
 
     if [[ $confirm != "yes" ]]; then
         echo -e "${BLUE}👍 Uninstallation cancelled. Henotic Gitco is still available!${NC}"
