@@ -19,49 +19,6 @@ echo -e "${YELLOW}🗑️  Henotic Gitco Uninstaller${NC}"
 echo -e "${PURPLE}==============================${NC}"
 echo ""
 
-# Check if gitco exists
-if ! command -v gitco &> /dev/null; then
-    echo -e "${BLUE}ℹ️  Henotic Gitco is not installed on this system.${NC}"
-    echo -e "${YELLOW}🔍 Checking for leftover configurations...${NC}"
-    
-    # Still check for leftover configs
-    FOUND_LEFTOVER=false
-    for config in "$HOME/.bashrc" "$HOME/.zshrc"; do
-        if [[ -f "$config" ]] && grep -q "gitco" "$config"; then
-            echo -e "${YELLOW}⚠️  Found gitco references in $config${NC}"
-            FOUND_LEFTOVER=true
-        fi
-    done
-    
-    if [[ $FOUND_LEFTOVER == false ]]; then
-        echo -e "${GREEN}✅ No leftover configurations found.${NC}"
-        exit 0
-    fi
-    
-    echo -e "${CYAN}🧹 Cleaning leftover configurations...${NC}"
-    echo -e "${YELLOW}Do you want to remove these leftover gitco references?${NC}"
-    read -p "Type 'yes' to clean up: " confirm_cleanup
-    
-    if [[ $confirm_cleanup != "yes" ]]; then
-        echo -e "${BLUE}👍 Cleanup cancelled. Leftover configurations remain.${NC}"
-        exit 0
-    fi
-    
-    CLEANING_LEFTOVER=true
-else
-    # Normal uninstall confirmation
-    echo -e "${RED}⚠️  This will remove Henotic Gitco from your system.${NC}"
-    echo -e "${YELLOW}Are you sure you want to uninstall Henotic Gitco?${NC}"
-    read -p "Type 'yes' to confirm: " confirm
-
-    if [[ $confirm != "yes" ]]; then
-        echo -e "${BLUE}👍 Uninstallation cancelled. Henotic Gitco is still available!${NC}"
-        exit 0
-    fi
-    
-    CLEANING_LEFTOVER=false
-fi
-
 # Detect shell
 if [[ $SHELL == *"zsh"* ]]; then
     SHELL_CONFIG="$HOME/.zshrc"
@@ -73,8 +30,6 @@ else
     echo -e "${YELLOW}⚠️  Unknown shell, trying both .bashrc and .zshrc${NC}"
     SHELL_CONFIG="$HOME/.bashrc"
 fi
-
-echo -e "${CYAN}🔄 Removing Henotic Gitco...${NC}"
 
 # Function to remove gitco from a config file
 remove_gitco() {
@@ -110,6 +65,53 @@ remove_gitco() {
     fi
 }
 
+# Check if gitco exists
+GITCO_INSTALLED=false
+if command -v gitco &> /dev/null; then
+    GITCO_INSTALLED=true
+fi
+
+# Check for leftover configs
+FOUND_LEFTOVER=false
+for config in "$HOME/.bashrc" "$HOME/.zshrc"; do
+    if [[ -f "$config" ]] && grep -q "gitco" "$config"; then
+        FOUND_LEFTOVER=true
+        break
+    fi
+done
+
+# Handle different scenarios
+if [[ $GITCO_INSTALLED == false && $FOUND_LEFTOVER == false ]]; then
+    echo -e "${BLUE}ℹ️  Henotic Gitco is not installed on this system.${NC}"
+    echo -e "${GREEN}✅ No leftover configurations found.${NC}"
+    exit 0
+elif [[ $GITCO_INSTALLED == false && $FOUND_LEFTOVER == true ]]; then
+    # Gitco command not found but configs exist
+    echo -e "${BLUE}ℹ️  Henotic Gitco command is not available, but leftover configurations found.${NC}"
+    echo -e "${YELLOW}🔍 Found gitco references in configuration files.${NC}"
+    echo -e "${CYAN}🧹 Do you want to clean up these leftover configurations?${NC}"
+    read -p "Type 'yes' to clean up: " confirm_cleanup
+    
+    if [[ $confirm_cleanup != "yes" ]]; then
+        echo -e "${BLUE}👍 Cleanup cancelled. Leftover configurations remain.${NC}"
+        exit 0
+    fi
+    
+    echo -e "${CYAN}🔄 Cleaning leftover configurations...${NC}"
+elif [[ $GITCO_INSTALLED == true ]]; then
+    # Normal uninstall
+    echo -e "${RED}⚠️  This will remove Henotic Gitco from your system.${NC}"
+    echo -e "${YELLOW}Are you sure you want to uninstall Henotic Gitco?${NC}"
+    read -p "Type 'yes' to confirm: " confirm
+
+    if [[ $confirm != "yes" ]]; then
+        echo -e "${BLUE}👍 Uninstallation cancelled. Henotic Gitco is still available!${NC}"
+        exit 0
+    fi
+    
+    echo -e "${CYAN}🔄 Removing Henotic Gitco...${NC}"
+fi
+
 # Remove from detected shell config
 remove_gitco "$SHELL_CONFIG"
 
@@ -128,7 +130,9 @@ if [[ -f "$HOME/.bash_completion" ]]; then
 fi
 
 echo ""
-if [[ $CLEANING_LEFTOVER == true ]]; then
+
+# Different success messages based on scenario
+if [[ $GITCO_INSTALLED == false ]]; then
     echo -e "${GREEN}🎉 Leftover gitco configurations have been cleaned!${NC}"
     echo -e "${PURPLE}================================================${NC}"
     echo ""
@@ -179,6 +183,7 @@ if [[ $SHELL == *"zsh"* ]]; then
 else
     echo -e "  ${CYAN}source ~/.bashrc${NC}"
 fi
+
 echo ""
 echo -e "${PURPLE}😢 Sorry to see you go!${NC}"
 echo -e "${YELLOW}If you had any issues, please report them at:${NC}"
