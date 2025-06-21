@@ -61,10 +61,18 @@ fi
 
 # Confirmation
 echo ""
-read -p "Are you sure you want to uninstall Henotic Gitco? (y/N): " confirm
-if [[ ! $confirm == [yY] ]]; then
-    echo -e "${BLUE}👍 Uninstall cancelled. Gitco stays! 🎉${NC}"
-    exit 0
+if [ -t 0 ]; then
+    # Interactive terminal - ask for confirmation
+    read -p "Are you sure you want to uninstall Henotic Gitco? (y/N): " confirm
+    if [[ ! $confirm == [yY] ]]; then
+        echo -e "${BLUE}👍 Uninstall cancelled. Gitco stays! 🎉${NC}"
+        exit 0
+    fi
+else
+    # Non-interactive (piped from curl) - show warning and continue after delay
+    echo -e "${YELLOW}⚠️  Running in non-interactive mode (piped from curl)${NC}"
+    echo -e "${CYAN}🔄 Continuing uninstall in 3 seconds... (Press Ctrl+C to cancel)${NC}"
+    sleep 3
 fi
 
 echo ""
