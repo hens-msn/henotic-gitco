@@ -39,16 +39,27 @@ if ! command -v gitco &> /dev/null; then
     fi
     
     echo -e "${CYAN}🧹 Cleaning leftover configurations...${NC}"
-fi
+    echo -e "${YELLOW}Do you want to remove these leftover gitco references?${NC}"
+    read -p "Type 'yes' to clean up: " confirm_cleanup
+    
+    if [[ $confirm_cleanup != "yes" ]]; then
+        echo -e "${BLUE}👍 Cleanup cancelled. Leftover configurations remain.${NC}"
+        exit 0
+    fi
+    
+    CLEANING_LEFTOVER=true
+else
+    # Normal uninstall confirmation
+    echo -e "${RED}⚠️  This will remove Henotic Gitco from your system.${NC}"
+    echo -e "${YELLOW}Are you sure you want to uninstall Henotic Gitco?${NC}"
+    read -p "Type 'yes' to confirm: " confirm
 
-# Confirm uninstallation
-echo -e "${RED}⚠️  This will remove Henotic Gitco from your system.${NC}"
-echo -e "${YELLOW}Are you sure you want to uninstall Henotic Gitco?${NC}"
-read -p "Type 'yes' to confirm: " confirm
-
-if [[ $confirm != "yes" ]]; then
-    echo -e "${BLUE}👍 Uninstallation cancelled. Henotic Gitco is still available!${NC}"
-    exit 0
+    if [[ $confirm != "yes" ]]; then
+        echo -e "${BLUE}👍 Uninstallation cancelled. Henotic Gitco is still available!${NC}"
+        exit 0
+    fi
+    
+    CLEANING_LEFTOVER=false
 fi
 
 # Detect shell
@@ -117,13 +128,24 @@ if [[ -f "$HOME/.bash_completion" ]]; then
 fi
 
 echo ""
-echo -e "${GREEN}🎉 Henotic Gitco has been successfully uninstalled!${NC}"
-echo -e "${PURPLE}========================================${NC}"
-echo ""
-echo -e "${YELLOW}📝 What was removed:${NC}"
-echo -e "  • gitco command and all its functions"
-echo -e "  • Tab completion for gitco"
-echo -e "  • All related aliases and configurations"
+if [[ $CLEANING_LEFTOVER == true ]]; then
+    echo -e "${GREEN}🎉 Leftover gitco configurations have been cleaned!${NC}"
+    echo -e "${PURPLE}================================================${NC}"
+    echo ""
+    echo -e "${YELLOW}📝 What was cleaned:${NC}"
+    echo -e "  • Leftover gitco references in config files"
+    echo -e "  • Any remaining gitco aliases"
+    echo -e "  • Orphaned gitco configurations"
+else
+    echo -e "${GREEN}🎉 Henotic Gitco has been successfully uninstalled!${NC}"
+    echo -e "${PURPLE}========================================${NC}"
+    echo ""
+    echo -e "${YELLOW}📝 What was removed:${NC}"
+    echo -e "  • gitco command and all its functions"
+    echo -e "  • Tab completion for gitco"
+    echo -e "  • All related aliases and configurations"
+fi
+
 echo ""
 
 # Quick verification
