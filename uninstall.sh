@@ -1,7 +1,7 @@
 #!/bin/bash
 # ============================================
 # 🗑️ Henotic Gitco Uninstaller Script
-# Remove Henotic Gitco from your system
+# Clean removal for Henotic Gitco
 # Usage: curl -sSL https://raw.githubusercontent.com/hens-msn/henotic-gitco/main/uninstall.sh | bash
 # Author: Henotic AI
 # ============================================
@@ -15,17 +15,10 @@ PURPLE='\033[0;35m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-echo -e "${YELLOW}🗑️  Henotic Gitco Uninstaller${NC}"
-echo -e "${PURPLE}==============================${NC}"
+echo -e "${CYAN}🗑️ Uninstalling Henotic Gitco...${NC}"
+echo -e "${PURPLE}================================${NC}"
+echo -e "${YELLOW}Kenapa sih mau uninstall? 😢${NC}"
 echo ""
-
-# Check for force flag
-FORCE_UNINSTALL=false
-if [[ "$1" == "--force" ]]; then
-    FORCE_UNINSTALL=true
-    echo -e "${RED}🚨 Force mode enabled - no confirmation required${NC}"
-    echo ""
-fi
 
 # Detect shell
 if [[ $SHELL == *"zsh"* ]]; then
@@ -35,182 +28,139 @@ elif [[ $SHELL == *"bash"* ]]; then
     SHELL_CONFIG="$HOME/.bashrc"
     echo -e "${BLUE}📍 Detected: Bash shell${NC}"
 else
-    echo -e "${YELLOW}⚠️  Unknown shell, trying both .bashrc and .zshrc${NC}"
+    echo -e "${YELLOW}⚠️  Unknown shell, checking both .bashrc and .zshrc${NC}"
     SHELL_CONFIG="$HOME/.bashrc"
 fi
 
-# Function to remove gitco from a config file
-remove_gitco() {
-    local config_file=$1
-    
-    if [ -f "$config_file" ]; then
-        # More comprehensive removal patterns
-        # Remove main Henotic Gitco block
-        sed -i '/# Henotic Gitco - Ultimate Git Commit Script/,/complete -F _gitco_completion gitco/d' "$config_file"
-        
-        # Remove any old versions with different headers
-        sed -i '/# Ultimate Git Commit Script/,/complete -F _gitco_completion gitco/d' "$config_file"
-        sed -i '/# gitco function/,/complete -F _gitco_completion gitco/d' "$config_file"
-        
-        # Remove any standalone gitco function
-        sed -i '/^gitco()/,/^}/d' "$config_file"
-        
-        # Remove completion function if exists separately
-        sed -i '/^_gitco_completion()/,/^}/d' "$config_file"
-        sed -i '/^complete -F _gitco_completion gitco/d' "$config_file"
-        
-        # Remove any gitco aliases
-        sed -i '/alias.*gitco/d' "$config_file"
-        
-        # Verify removal
-        if grep -q "gitco" "$config_file"; then
-            echo -e "${YELLOW}⚠️  Some gitco references may still exist in $config_file${NC}"
-            echo -e "${BLUE}🔍 Remaining references:${NC}"
-            grep -n "gitco" "$config_file" | head -5
-        else
-            echo -e "${GREEN}✅ Completely removed from $config_file${NC}"
-        fi
-    fi
-}
+# Check if Henotic Gitco is installed
+GITCO_FOUND=false
 
-# Check if gitco exists
-GITCO_INSTALLED=false
-if command -v gitco &> /dev/null; then
-    GITCO_INSTALLED=true
+if [[ -f "$SHELL_CONFIG" ]] && grep -q "Henotic Gitco" "$SHELL_CONFIG"; then
+    GITCO_FOUND=true
 fi
 
-# Check for leftover configs
-FOUND_LEFTOVER=false
-for config in "$HOME/.bashrc" "$HOME/.zshrc"; do
-    if [[ -f "$config" ]] && grep -q "gitco" "$config"; then
-        FOUND_LEFTOVER=true
-        break
-    fi
-done
+# Also check .zshrc if we're on unknown shell
+if [[ $SHELL != *"zsh"* ]] && [[ -f "$HOME/.zshrc" ]] && grep -q "Henotic Gitco" "$HOME/.zshrc"; then
+    GITCO_FOUND=true
+    SHELL_CONFIG="$HOME/.zshrc"
+fi
 
-# Handle different scenarios
-if [[ $GITCO_INSTALLED == false && $FOUND_LEFTOVER == false ]]; then
-    echo -e "${BLUE}ℹ️  Henotic Gitco is not installed on this system.${NC}"
-    echo -e "${GREEN}✅ No leftover configurations found.${NC}"
-    exit 0
-elif [[ $GITCO_INSTALLED == false && $FOUND_LEFTOVER == true ]]; then
-    # Gitco command not found but configs exist - auto cleanup leftover
-    echo -e "${BLUE}ℹ️  Henotic Gitco command is not available, but leftover configurations found.${NC}"
-    echo -e "${YELLOW}🔍 Found gitco references in configuration files.${NC}"
-    echo -e "${CYAN}🧹 Auto-cleaning leftover configurations (since gitco command doesn't exist)...${NC}"
-    echo -e "${BLUE}💡 If you want interactive mode, download and run the script manually:${NC}"
-    echo -e "${CYAN}   wget https://raw.githubusercontent.com/hens-msn/henotic-gitco/main/uninstall.sh${NC}"
-    echo -e "${CYAN}   chmod +x uninstall.sh && ./uninstall.sh${NC}"
-    echo ""
-elif [[ $GITCO_INSTALLED == true ]]; then
-    # Normal uninstall - need confirmation since gitco is active
-    if [[ $FORCE_UNINSTALL == true ]]; then
-        echo -e "${RED}🚨 Force uninstalling Henotic Gitco...${NC}"
+if [[ "$GITCO_FOUND" == "false" ]]; then
+    # Check if gitco command exists anyway
+    if command -v gitco &> /dev/null; then
+        echo -e "${YELLOW}⚠️  Gitco command found but installation not detected in shell config${NC}"
+        echo -e "${BLUE}💡 You might need to manually remove gitco if it's installed elsewhere${NC}"
     else
-        echo -e "${RED}⚠️  This will remove Henotic Gitco from your system.${NC}"
-        echo -e "${YELLOW}Are you sure you want to uninstall Henotic Gitco?${NC}"
-        
-        # Try multiple methods to get user input
-        if [[ -t 0 ]]; then
-            # Interactive terminal
-            read -p "Type 'yes' to confirm: " confirm
-        else
-            # Non-interactive (piped) - provide alternative
-            echo -e "${BLUE}🚫 Cannot get user input in non-interactive mode.${NC}"
-            echo -e "${YELLOW}📥 For interactive uninstall, download and run manually:${NC}"
-            echo -e "${CYAN}   wget https://raw.githubusercontent.com/hens-msn/henotic-gitco/main/uninstall.sh${NC}"
-            echo -e "${CYAN}   chmod +x uninstall.sh && ./uninstall.sh${NC}"
-            echo ""
-            echo -e "${RED}🚨 Or add '--force' flag to auto-uninstall:${NC}"
-            echo -e "${CYAN}   curl -sSL https://raw.github.com/hens-msn/henotic-gitco/main/uninstall.sh | bash -s -- --force${NC}"
-            exit 0
-        fi
-
-        if [[ $confirm != "yes" ]]; then
-            echo -e "${BLUE}👍 Uninstallation cancelled. Henotic Gitco is still available!${NC}"
-            exit 0
-        fi
+        echo -e "${GREEN}✅ Henotic Gitco is not installed or already removed!${NC}"
+        echo -e "${BLUE}👍 Nothing to do here.${NC}"
+        exit 0
     fi
+else
+    echo -e "${YELLOW}🔍 Found Henotic Gitco installation in: $SHELL_CONFIG${NC}"
+fi
+
+# Confirmation
+echo ""
+read -p "Are you sure you want to uninstall Henotic Gitco? (y/N): " confirm
+if [[ ! $confirm == [yY] ]]; then
+    echo -e "${BLUE}👍 Uninstall cancelled. Gitco stays! 🎉${NC}"
+    exit 0
+fi
+
+echo ""
+echo -e "${CYAN}🧹 Removing Henotic Gitco from shell configuration...${NC}"
+
+# Remove from shell config with surgical precision
+if [[ -f "$SHELL_CONFIG" ]]; then
+    # Create a backup of current config (temporary)
+    cp "$SHELL_CONFIG" "${SHELL_CONFIG}.gitco_backup"
     
-    echo -e "${CYAN}🔄 Removing Henotic Gitco...${NC}"
-fi
-
-# Remove from detected shell config
-remove_gitco "$SHELL_CONFIG"
-
-# Also try to remove from other common shell configs
-if [[ "$SHELL_CONFIG" != "$HOME/.bashrc" ]] && [[ -f "$HOME/.bashrc" ]]; then
-    remove_gitco "$HOME/.bashrc"
-fi
-
-if [[ "$SHELL_CONFIG" != "$HOME/.zshrc" ]] && [[ -f "$HOME/.zshrc" ]]; then
-    remove_gitco "$HOME/.zshrc"
-fi
-
-# Remove bash completion if exists
-if [[ -f "$HOME/.bash_completion" ]]; then
-    sed -i '/gitco/d' "$HOME/.bash_completion" 2>/dev/null
-fi
-
-echo ""
-
-# Different success messages based on scenario
-if [[ $GITCO_INSTALLED == false ]]; then
-    echo -e "${GREEN}🎉 Leftover gitco configurations have been cleaned!${NC}"
-    echo -e "${PURPLE}================================================${NC}"
-    echo ""
-    echo -e "${YELLOW}📝 What was cleaned:${NC}"
-    echo -e "  • Leftover gitco references in config files"
-    echo -e "  • Any remaining gitco aliases"
-    echo -e "  • Orphaned gitco configurations"
+    # Remove Henotic Gitco block (from marker to completion)
+    sed -i.bak '/# ============================================/,/complete -F _gitco_completion gitco/d' "$SHELL_CONFIG"
+    
+    # Also remove any standalone gitco function (fallback)
+    sed -i.bak '/^gitco()/,/^}/d' "$SHELL_CONFIG"
+    sed -i.bak '/^_gitco_completion()/,/^}/d' "$SHELL_CONFIG"
+    sed -i.bak '/complete -F _gitco_completion gitco/d' "$SHELL_CONFIG"
+    
+    # Remove empty lines that might be left
+    sed -i.bak '/^$/N;/^\n$/d' "$SHELL_CONFIG"
+    
+    # Clean up sed backup files
+    rm -f "${SHELL_CONFIG}.bak"
+    
+    echo -e "${GREEN}✅ Removed from $SHELL_CONFIG${NC}"
 else
-    echo -e "${GREEN}🎉 Henotic Gitco has been successfully uninstalled!${NC}"
-    echo -e "${PURPLE}========================================${NC}"
-    echo ""
-    echo -e "${YELLOW}📝 What was removed:${NC}"
-    echo -e "  • gitco command and all its functions"
-    echo -e "  • Tab completion for gitco"
-    echo -e "  • All related aliases and configurations"
+    echo -e "${YELLOW}⚠️  Shell config file not found: $SHELL_CONFIG${NC}"
 fi
 
-echo ""
-
-# Quick verification
-echo -e "${CYAN}🔍 Verifying removal...${NC}"
-if command -v gitco &> /dev/null; then
-    echo -e "${RED}⚠️  gitco command still exists! Manual cleanup may be needed.${NC}"
-else
-    echo -e "${GREEN}✅ gitco command successfully removed${NC}"
-fi
-
-# Check for any remaining references
-REMAINING_REFS=false
-for config in "$HOME/.bashrc" "$HOME/.zshrc"; do
-    if [[ -f "$config" ]] && grep -q "gitco" "$config"; then
-        if [[ $REMAINING_REFS == false ]]; then
-            echo -e "${YELLOW}⚠️  Some gitco references may still exist:${NC}"
-            REMAINING_REFS=true
-        fi
-        echo -e "${BLUE}   - $config${NC}"
+# Also check and clean other common shell configs
+for config_file in "$HOME/.bash_profile" "$HOME/.profile"; do
+    if [[ -f "$config_file" ]] && grep -q "Henotic Gitco" "$config_file"; then
+        echo -e "${CYAN}🧹 Found and cleaning $config_file...${NC}"
+        sed -i.bak '/# ============================================/,/complete -F _gitco_completion gitco/d' "$config_file"
+        sed -i.bak '/^gitco()/,/^}/d' "$config_file"
+        sed -i.bak '/^_gitco_completion()/,/^}/d' "$config_file"
+        sed -i.bak '/complete -F _gitco_completion gitco/d' "$config_file"
+        rm -f "${config_file}.bak"
+        echo -e "${GREEN}✅ Cleaned $config_file${NC}"
     fi
 done
 
-if [[ $REMAINING_REFS == false ]]; then
-    echo -e "${GREEN}✅ Configuration files clean${NC}"
-fi
-
-echo ""
-echo -e "${YELLOW}🔄 To apply changes, please restart your terminal or run:${NC}"
+# Reload shell configuration to remove gitco from current session
+echo -e "${CYAN}🔄 Reloading shell configuration...${NC}"
 if [[ $SHELL == *"zsh"* ]]; then
-    echo -e "  ${CYAN}source ~/.zshrc${NC}"
+    source ~/.zshrc 2>/dev/null || true
 else
-    echo -e "  ${CYAN}source ~/.bashrc${NC}"
+    source ~/.bashrc 2>/dev/null || true
+fi
+
+# Verification
+echo ""
+echo -e "${CYAN}🔍 Verifying removal...${NC}"
+
+VERIFICATION_PASSED=true
+
+# Check if gitco command still exists
+if command -v gitco &> /dev/null; then
+    echo -e "${YELLOW}⚠️  gitco command still available (might need to restart terminal)${NC}"
+    VERIFICATION_PASSED=false
+else
+    echo -e "${GREEN}✅ gitco command removed${NC}"
+fi
+
+# Check shell config files
+for config_file in "$HOME/.bashrc" "$HOME/.zshrc" "$HOME/.bash_profile" "$HOME/.profile"; do
+    if [[ -f "$config_file" ]] && grep -q "gitco\|Henotic Gitco" "$config_file"; then
+        echo -e "${YELLOW}⚠️  Found gitco references in $config_file${NC}"
+        VERIFICATION_PASSED=false
+    fi
+done
+
+if [[ "$VERIFICATION_PASSED" == "true" ]]; then
+    echo -e "${GREEN}✅ All gitco references removed${NC}"
+fi
+
+# Clean up backup file
+if [[ -f "${SHELL_CONFIG}.gitco_backup" ]]; then
+    rm -f "${SHELL_CONFIG}.gitco_backup"
 fi
 
 echo ""
-echo -e "${PURPLE}😢 Sorry to see you go!${NC}"
-echo -e "${YELLOW}If you had any issues, please report them at:${NC}"
-echo -e "${CYAN}https://github.com/hens-msn/henotic-gitco/issues${NC}"
+if [[ "$VERIFICATION_PASSED" == "true" ]]; then
+    echo -e "${GREEN}🎉 Henotic Gitco successfully uninstalled!${NC}"
+else
+    echo -e "${YELLOW}⚠️  Uninstall completed with warnings${NC}"
+    echo -e "${BLUE}💡 You might need to restart your terminal or manually remove remaining references${NC}"
+fi
+
+echo -e "${PURPLE}=====================================${NC}"
 echo ""
-echo -e "${GREEN}You can always reinstall Henotic Gitco later with:${NC}"
-echo -e "${CYAN}curl -sSL https://raw.githubusercontent.com/hens-msn/henotic-gitco/main/install.sh | bash${NC}"
+echo -e "${CYAN}💔 We're sad to see you go...${NC}"
+echo -e "${YELLOW}🤔 If you had issues, please report them at:${NC}"
+echo -e "${BLUE}   https://github.com/hens-msn/henotic-gitco/issues${NC}"
+echo ""
+echo -e "${PURPLE}✨ Thanks for using Henotic Gitco!${NC}"
+echo -e "${YELLOW}Made with ❤️  by Henotic AI - Script Andalan Sejuta Umat!${NC}"
+echo ""
+echo -e "${GREEN}👋 Bye bye! Comeback anytime! 🚀${NC}" 
