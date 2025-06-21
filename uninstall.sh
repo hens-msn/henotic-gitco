@@ -19,6 +19,14 @@ echo -e "${YELLOW}🗑️  Henotic Gitco Uninstaller${NC}"
 echo -e "${PURPLE}==============================${NC}"
 echo ""
 
+# Check for force flag
+FORCE_UNINSTALL=false
+if [[ "$1" == "--force" ]]; then
+    FORCE_UNINSTALL=true
+    echo -e "${RED}🚨 Force mode enabled - no confirmation required${NC}"
+    echo ""
+fi
+
 # Detect shell
 if [[ $SHELL == *"zsh"* ]]; then
     SHELL_CONFIG="$HOME/.zshrc"
@@ -86,27 +94,42 @@ if [[ $GITCO_INSTALLED == false && $FOUND_LEFTOVER == false ]]; then
     echo -e "${GREEN}✅ No leftover configurations found.${NC}"
     exit 0
 elif [[ $GITCO_INSTALLED == false && $FOUND_LEFTOVER == true ]]; then
-    # Gitco command not found but configs exist
+    # Gitco command not found but configs exist - auto cleanup leftover
     echo -e "${BLUE}ℹ️  Henotic Gitco command is not available, but leftover configurations found.${NC}"
     echo -e "${YELLOW}🔍 Found gitco references in configuration files.${NC}"
-    echo -e "${CYAN}🧹 Do you want to clean up these leftover configurations?${NC}"
-    read -p "Type 'yes' to clean up: " confirm_cleanup </dev/tty
-    
-    if [[ $confirm_cleanup != "yes" ]]; then
-        echo -e "${BLUE}👍 Cleanup cancelled. Leftover configurations remain.${NC}"
-        exit 0
-    fi
-    
-    echo -e "${CYAN}🔄 Cleaning leftover configurations...${NC}"
+    echo -e "${CYAN}🧹 Auto-cleaning leftover configurations (since gitco command doesn't exist)...${NC}"
+    echo -e "${BLUE}💡 If you want interactive mode, download and run the script manually:${NC}"
+    echo -e "${CYAN}   wget https://raw.githubusercontent.com/hens-msn/henotic-gitco/main/uninstall.sh${NC}"
+    echo -e "${CYAN}   chmod +x uninstall.sh && ./uninstall.sh${NC}"
+    echo ""
 elif [[ $GITCO_INSTALLED == true ]]; then
-    # Normal uninstall
-    echo -e "${RED}⚠️  This will remove Henotic Gitco from your system.${NC}"
-    echo -e "${YELLOW}Are you sure you want to uninstall Henotic Gitco?${NC}"
-    read -p "Type 'yes' to confirm: " confirm </dev/tty
+    # Normal uninstall - need confirmation since gitco is active
+    if [[ $FORCE_UNINSTALL == true ]]; then
+        echo -e "${RED}🚨 Force uninstalling Henotic Gitco...${NC}"
+    else
+        echo -e "${RED}⚠️  This will remove Henotic Gitco from your system.${NC}"
+        echo -e "${YELLOW}Are you sure you want to uninstall Henotic Gitco?${NC}"
+        
+        # Try multiple methods to get user input
+        if [[ -t 0 ]]; then
+            # Interactive terminal
+            read -p "Type 'yes' to confirm: " confirm
+        else
+            # Non-interactive (piped) - provide alternative
+            echo -e "${BLUE}🚫 Cannot get user input in non-interactive mode.${NC}"
+            echo -e "${YELLOW}📥 For interactive uninstall, download and run manually:${NC}"
+            echo -e "${CYAN}   wget https://raw.githubusercontent.com/hens-msn/henotic-gitco/main/uninstall.sh${NC}"
+            echo -e "${CYAN}   chmod +x uninstall.sh && ./uninstall.sh${NC}"
+            echo ""
+            echo -e "${RED}🚨 Or add '--force' flag to auto-uninstall:${NC}"
+            echo -e "${CYAN}   curl -sSL https://raw.github.com/hens-msn/henotic-gitco/main/uninstall.sh | bash -s -- --force${NC}"
+            exit 0
+        fi
 
-    if [[ $confirm != "yes" ]]; then
-        echo -e "${BLUE}👍 Uninstallation cancelled. Henotic Gitco is still available!${NC}"
-        exit 0
+        if [[ $confirm != "yes" ]]; then
+            echo -e "${BLUE}👍 Uninstallation cancelled. Henotic Gitco is still available!${NC}"
+            exit 0
+        fi
     fi
     
     echo -e "${CYAN}🔄 Removing Henotic Gitco...${NC}"
